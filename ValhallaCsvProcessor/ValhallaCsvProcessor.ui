@@ -1,0 +1,53 @@
+<ui version="4.0">
+	<class>ValhallaCsvProcessorClass</class>
+	<widget class="QMainWindow" name="ValhallaCsvProcessorClass">
+		<widget class="QWidget" name="centralwidget">
+			<layout class="QVBoxLayout" name="verticalLayout">
+				<item>
+					<layout class="QHBoxLayout" name="topLayout">
+						<item>
+							<widget class="QPushButton" name="pushButtonBrowse">
+								<property name="text">
+									<string>Browse CSV</string>
+								</property>
+							</widget>
+						</item>
+						<item>
+							<widget class="QPushButton" name="pushButtonClearLog">
+								<property name="text">
+									<string>Clear Log</string>
+								</property>
+							</widget>
+						</item>
+						<item>
+							<widget class="QPushButton" name="pushButtonOpenOutput">
+								<property name="text">
+									<string>Open Output Folder</string>
+								</property>
+							</widget>
+						</item>
+					</layout>
+				</item>
+				<item>
+					<widget class="QProgressBar" name="progressBar">
+						<property name="minimum">
+							<number>0</number>
+						</property>
+						<property name="maximum">
+							<number>100</number>
+						</property>
+					</widget>
+				</item>
+				<item>
+					<widget class="QPlainTextEdit" name="plainTextEditLog">
+						<property name="readOnly">
+							<bool>true</bool>
+						</property>
+					</widget>
+				</item>
+			</layout>
+		</widget>
+	</widget>
+	<resources/>
+	<connections/>
+</ui>
