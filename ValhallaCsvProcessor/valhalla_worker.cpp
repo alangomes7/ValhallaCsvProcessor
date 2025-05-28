@@ -13,17 +13,24 @@
 #include <QTextStream>
 #include <QStringList>
 
-ValhallaWorker::ValhallaWorker(const QString& line, const QString& outPath, 
+ValhallaWorker::ValhallaWorker(const QString& line, const QString& outPath, const QString& endpoint, 
     QSharedPointer<QVector<QString>> accumulatedLines, QMutex* writeMutex){
     m_csvLine = line;
     m_outputPath = outPath;
     m_accumulatedLines = accumulatedLines;
     m_writeMutex = writeMutex;
+    m_endpoint = endpoint;
     setAutoDelete(true);
 };
 
 void ValhallaWorker::run() {
-    processLine();
+    if (!m_stopRequested) {
+        processLine();
+    }
+}
+
+void ValhallaWorker::stopRunning() {
+    m_stopRequested = true;
 }
 
 QAtomicInt ValhallaWorker::lineCounter(0);
@@ -67,12 +74,25 @@ void ValhallaWorker::processResponse(const QJsonObject& json, QString& distance,
 }
 
 void ValhallaWorker::processLine() {
+    if (m_stopRequested) {
+        emit log("Worker stopped by request");
+        return;  // Early exit
+    }
+
     QStringList parts = m_csvLine.split(',');
+    if (parts.size() < 7) {
+        emit log("Invalid CSV line format");
+        return;
+    }
+
+    if (m_stopRequested) {
+        emit log("Cancelled during request");
+        return;
+    }
 
     QString oLat = parts[2], oLon = parts[3];
     QString dLat = parts[5], dLon = parts[6];
 
-    QString url = "http://localhost:8002/route";
     QJsonObject body{
         { "costing", "auto" },
         { "locations", QJsonArray {
@@ -82,7 +102,7 @@ void ValhallaWorker::processLine() {
     };
 
     QString errorInfo;
-    QJsonObject jsonResponse = sendRequest(url, body, errorInfo);
+    QJsonObject jsonResponse = sendRequest(m_endpoint, body, errorInfo);
 
     QString distance, duration, status, info, infoLog;
     QString outputLine;
@@ -92,7 +112,7 @@ void ValhallaWorker::processLine() {
         infoLog += info + distance + " , " + duration;
 
         outputLine = parts[0] + "," + parts[1] + "," + parts[2] + "," + parts[3] + "," + parts[4] + "," +
-            parts[5] + "," + parts[6] + "," + url + "," + distance + "," + duration + "," +
+            parts[5] + "," + parts[6] + "," + m_endpoint + "," + distance + "," + duration + "," +
             "OK" + "," + info + "\n";
         status = "OK";
     }
@@ -100,7 +120,7 @@ void ValhallaWorker::processLine() {
         status = "Error";
         infoLog = errorInfo;
         outputLine = parts[0] + "," + parts[1] + "," + parts[2] + "," + parts[3] + "," + parts[4] + "," +
-            parts[5] + "," + parts[6] + "," + url + ",,," + status + "," + errorInfo + "\n";
+            parts[5] + "," + parts[6] + "," + m_endpoint + ",,," + status + "," + errorInfo + "\n";
     }
 
     // Add to accumulated lines with thread-safe access

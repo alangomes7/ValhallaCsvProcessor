@@ -18,11 +18,18 @@ ValhallaCsvProcessor::ValhallaCsvProcessor(QWidget* parent)
     QThreadPool::globalInstance()->setMaxThreadCount(QThread::idealThreadCount());
 
     connect(ui->pushButtonBrowse, &QPushButton::clicked, this, &ValhallaCsvProcessor::on_selectFileButton_clicked);
+    connect(ui->pushButtonRun, &QPushButton::clicked, this, &ValhallaCsvProcessor::on_runButton_clicked);
     connect(ui->pushButtonClearLog, &QPushButton::clicked, this, [=]() {
         ui->plainTextEditLog->clear();
         });
     connect(ui->pushButtonOpenOutput, &QPushButton::clicked, this, [=]() {
-        QDesktopServices::openUrl(QUrl::fromLocalFile(QDir("output").absolutePath()));
+        if (!m_filePath.isEmpty()) {
+            QFileInfo fileInfo(m_filePath);
+            QString folder = fileInfo.absolutePath();
+            QString outputDir = folder + "/output";
+            QDir().mkpath(outputDir);
+            QDesktopServices::openUrl(QUrl::fromLocalFile(outputDir));
+        }
         });
 
     ui->progressBar->setValue(0);
@@ -39,9 +46,10 @@ ValhallaCsvProcessor::~ValhallaCsvProcessor() {
 }
 
 void ValhallaCsvProcessor::on_selectFileButton_clicked() {
-    QString filePath = QFileDialog::getOpenFileName(this, "Select CSV File", "", "*.csv");
-    if (!filePath.isEmpty()) {
-        QFileInfo fileInfo(filePath);
+    m_filePath = QFileDialog::getOpenFileName(this, "Select CSV File", "", "*.csv");
+    if (!m_filePath.isEmpty()) {
+        ui->labelInputFile->setText(m_filePath);
+        QFileInfo fileInfo(m_filePath);
         QString folder = fileInfo.absolutePath();
         QString time = timestamp();
 
@@ -54,8 +62,20 @@ void ValhallaCsvProcessor::on_selectFileButton_clicked() {
 
         logFilePath = logDir + "/log_" + time + ".txt";
         outputFilePath = outputDir + "/output_" + time + ".csv";
+    }
+}
 
-        processCSV(filePath);
+void ValhallaCsvProcessor::on_runButton_clicked() {
+    if (!m_running) {
+        if (m_filePath.isEmpty()) return;
+        m_running = true;
+        ui->pushButtonRun->setText("Stop");
+        processCSV(m_filePath);
+    }
+    else {
+        m_running = false;
+        emit stopRunning();
+        ui->pushButtonRun->setText("Start");
     }
 }
 
@@ -83,7 +103,10 @@ void ValhallaCsvProcessor::processCSV(const QString& filePath) {
     int flushLines = 5000, linesCount = 0;
     for (const QString& line : lines) {
         linesCount++;
-        auto* task = new ValhallaWorker(line, outputPath(), accumulatedLines, writeMutex);
+        auto* task = new ValhallaWorker(line, outputPath(), endpoint(), accumulatedLines, writeMutex);
+
+        // Connect the stop signal
+        connect(this, &ValhallaCsvProcessor::stopRunning, task, &ValhallaWorker::stopRunning);
         connect(task, &ValhallaWorker::log, this, [=](const QString& msg) {
             logMessage(msg);
             ui->progressBar->setValue(++(*count));
@@ -115,9 +138,9 @@ void ValhallaCsvProcessor::processCSV(const QString& filePath) {
                 delete timer;
                 delete count;
                 delete writeMutex;
+                ui->pushButtonRun->setText("Start");
             }
             });
-
         QThreadPool::globalInstance()->start(task);
     }
 }
@@ -151,6 +174,11 @@ void ValhallaCsvProcessor::logMessage(const QString& msg) {
 
 QString ValhallaCsvProcessor::outputPath() const {
     return outputFilePath;
+}
+
+QString ValhallaCsvProcessor::endpoint() const {
+    m_endpoint = ui->lineEditServer->text() + ui->lineEditOperation->text();
+    return m_endpoint;
 }
 
 QString ValhallaCsvProcessor::logPath() const {
