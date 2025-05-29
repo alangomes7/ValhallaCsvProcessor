@@ -1,5 +1,7 @@
 # ValhallaCsvProcessor
 
+Here we have two desktop programs to process pair of coordinates using Valhalla Docker Server.
+
 **ValhallaCsvProcessor** is a Qt-based desktop application built with C++ that reads a CSV file containing coordinate pairs, sends distance/duration requests to a local [Valhalla routing server](https://github.com/valhalla/valhalla), and saves the results to a structured output file. It also logs the entire process and supports threading for better performance.
 
 ## Features
@@ -11,87 +13,14 @@
 * Saves results and logs to disk.
 * Lightweight, responsive UI with multithreaded processing using `QThreadPool`.
 
-## UI Overview
+---
 
-* **Browse CSV**: Select the input CSV file.
-* **Server**: Set the Valhalla endpoint URL (default: `http://localhost:8002`).
-* **Start**: Begin processing the CSV file.
-* **Open Output Folder**: Quickly access the output directory.
-* **Log Viewer**: Shows step-by-step processing info.
-* **Progress Bar**: Tracks progress.
-* **Clear Log**: Clears the log view.
+# Geographic Graph Tools Suite
 
-## Requirements
+Here we have **two powerful PyQt6 desktop applications** for working with geographic network data in CSV format:
 
-* Qt 6.8 or higher
-* C++17 or higher
-* Valhalla server running locally (e.g., using Docker)
+1. **Graph Network Visualizer** – For visualizing geographic graph networks on interactive maps.
+2. **Matrix Distance Filter Application** – For filtering and cleaning geographic distance matrices using advanced criteria.
 
-## CSV Format
-
-Input CSV must contain coordinate pairs per row. For example:
-distances.csv
-```
-Combinations,Origin - name,Origin - Latitude,Origin - Longitude,Destination - name,Destination - Latitude,Destination - Longitude,URL de Solic.,Distance Drive (meters),Duration Drive (seconds),Status,Status Info
-Acari/Acari,Acari,-22.82558975,-43.34448497,Acari,-22.82558975,-43.34448497,,,,,
-Acari/Alto da Boa Vista,Acari,-22.82558975,-43.34448497,Alto da Boa Vista,-22.97297066,-43.28328547,,,,,
-Acari/Anchieta,Acari,-22.82558975,-43.34448497,Anchieta,-22.82086619,-43.39685323,,,,,
-...
-```
-
-Output CSV includes distance/duration results, written to a timestamped file name.
-distances_20250529_103213.csv = timestamp: 2025/05/29_10:32:13
-```
-Combinations,Origin - name,Origin - Latitude,Origin - Longitude,Destination - name,Destination - Latitude,Destination - Longitude,URL de Solic.,Distance Drive (meters),Duration Drive (seconds),Status,Status Info
-Acari/Acari,Acari,-22.82558975,-43.34448497,Acari,-22.82558975,-43.34448497,http://localhost:8002/route,0,0,OK,
-Acari/Alto da Boa Vista,Acari,-22.82558975,-43.34448497,Alto da Boa Vista,-22.97297066,-43.28328547,http://localhost:8002/route,35168,1823.23,OK,
-Acari/Anchieta,Acari,-22.82558975,-43.34448497,Anchieta,-22.82086619,-43.39685323,http://localhost:8002/route,10716,632.873,OK,
-...
-```
-## Build Instructions
-
-1. **Install Qt** (6.8+), CMake, and a C++ compiler (MSVC or GCC).
-2. Clone this repo:
-
-   ```bash
-   git clone https://github.com/alangomes7/ValhallaCsvProcessor.git
-   cd ValhallaCsvProcessor
-   ```
-3. Open the `.pro` file or `.sln` in Qt Creator or Visual Studio with Qt integration.
-4. Build and run the project.
-
-## Run Instructions
-
-1. Launch the app.
-2. Click **Browse CSV** to load your input file.
-3. Confirm or change the **Server** URL.
-4. Click **Start** to process routes.
-5. View logs and progress in real-time.
-6. Click **Open Output Folder** to view the results.
-
-## Output Files
-
-* **Processed CSV**: Includes calculated routes from Valhalla.
-* **Log File**: Contains execution details for debugging and auditing.
-
-## Code Structure
-
-| File                          | Description                               |
-| ----------------------------- | ----------------------------------------- |
-| `ValhallaCsvProcessor.h/.cpp` | Main window logic and UI control          |
-| `ui_ValhallaCsvProcessor.h`   | Auto-generated UI header from Qt Designer |
-| `.ui` file                    | Qt Designer file defining layout          |
-| `writeAccumulatedLines(...)`  | Static utility to append output lines     |
-
-## TODO
-
-* Add support for other Valhalla operations (`/matrix`, `/isoline`, etc.)
-* Add error handling and retry logic for failed HTTP requests
-* Allow CSV header customization
-* Export stats (e.g., average distance)
-
-## License
-
-MIT License | Valhala
-
+* These scripts are for filter and generate the graph visualization from the generated file by Valhala Processor.
 ---
