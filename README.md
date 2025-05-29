@@ -7,7 +7,7 @@ This project sets up [Valhalla](https://github.com/valhalla/valhalla), an open-s
 
 ---
 
-# ValhallaCsvProcessor
+# 📄 ValhallaCsvProcessor
 
 Here we have two desktop programs to process pair of coordinates using Valhalla Docker Server.
 
@@ -24,7 +24,7 @@ Here we have two desktop programs to process pair of coordinates using Valhalla 
 
 ---
 
-# Geographic Graph Tools Suite
+# 🛠️ Geographic Graph Tools Suite
 
 Here we have **two powerful PyQt6 desktop applications** for working with geographic network data in CSV format:
 

@@ -1,4 +1,4 @@
-# Geographic Graph Tools Suite
+# 🛠️ Geographic Graph Tools Suite
 
 Here we have **two powerful PyQt6 desktop applications** for working with geographic network data in CSV format:
 
