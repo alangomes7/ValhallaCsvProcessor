@@ -30,16 +30,24 @@
 ## CSV Format
 
 Input CSV must contain coordinate pairs per row. For example:
-
+distances.csv
 ```
-Combinations (Place x Place),Origin - name,Origin - Latitude,Origin - Longitude,Destination - name,Destination - Latitude,Destination - Longitude,Status,Distance Drive (meters),Duration Drive (seconds),Status Info
-Acari/Aeroporto de Jacarepaguá - Roberto Marinho,Acari,-22.82558975,-43.34448497,Aeroporto de Jacarepaguá - Roberto Marinho,-22.98778096,-43.37008867,Available,,,
-Acari/Aeroporto Internacional do Rio de Janeiro - Galeão – Antonio Carlos Jobim,Acari,-22.82558975,-43.34448497,Aeroporto Internacional do Rio de Janeiro - Galeão – Antonio Carlos Jobim,-22.80578499,-43.25729739,Available,,,
+Combinations,Origin - name,Origin - Latitude,Origin - Longitude,Destination - name,Destination - Latitude,Destination - Longitude,URL de Solic.,Distance Drive (meters),Duration Drive (seconds),Status,Status Info
+Acari/Acari,Acari,-22.82558975,-43.34448497,Acari,-22.82558975,-43.34448497,,,,,
+Acari/Alto da Boa Vista,Acari,-22.82558975,-43.34448497,Alto da Boa Vista,-22.97297066,-43.28328547,,,,,
+Acari/Anchieta,Acari,-22.82558975,-43.34448497,Anchieta,-22.82086619,-43.39685323,,,,,
 ...
 ```
 
-Output CSV includes distance/duration results, written to a timestamped file.
-
+Output CSV includes distance/duration results, written to a timestamped file name.
+distances_20250529_103213.csv = timestamp: 2025/05/29_10:32:13
+```
+Combinations,Origin - name,Origin - Latitude,Origin - Longitude,Destination - name,Destination - Latitude,Destination - Longitude,URL de Solic.,Distance Drive (meters),Duration Drive (seconds),Status,Status Info
+Acari/Acari,Acari,-22.82558975,-43.34448497,Acari,-22.82558975,-43.34448497,http://localhost:8002/route,0,0,OK,
+Acari/Alto da Boa Vista,Acari,-22.82558975,-43.34448497,Alto da Boa Vista,-22.97297066,-43.28328547,http://localhost:8002/route,35168,1823.23,OK,
+Acari/Anchieta,Acari,-22.82558975,-43.34448497,Anchieta,-22.82086619,-43.39685323,http://localhost:8002/route,10716,632.873,OK,
+...
+```
 ## Build Instructions
 
 1. **Install Qt** (6.8+), CMake, and a C++ compiler (MSVC or GCC).
