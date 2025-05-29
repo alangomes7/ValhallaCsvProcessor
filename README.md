@@ -32,8 +32,9 @@
 Input CSV must contain coordinate pairs per row. For example:
 
 ```
-from_lat,from_lon,to_lat,to_lon
-40.7486,-73.9864,40.7306,-73.9352
+Combinations (Place x Place),Origin - name,Origin - Latitude,Origin - Longitude,Destination - name,Destination - Latitude,Destination - Longitude,Status,Distance Drive (meters),Duration Drive (seconds),Status Info
+Acari/Aeroporto de Jacarepaguá - Roberto Marinho,Acari,-22.82558975,-43.34448497,Aeroporto de Jacarepaguá - Roberto Marinho,-22.98778096,-43.37008867,Available,,,
+Acari/Aeroporto Internacional do Rio de Janeiro - Galeão – Antonio Carlos Jobim,Acari,-22.82558975,-43.34448497,Aeroporto Internacional do Rio de Janeiro - Galeão – Antonio Carlos Jobim,-22.80578499,-43.25729739,Available,,,
 ...
 ```
 
@@ -45,7 +46,7 @@ Output CSV includes distance/duration results, written to a timestamped file.
 2. Clone this repo:
 
    ```bash
-   git clone https://github.com/yourusername/ValhallaCsvProcessor.git
+   git clone https://github.com/alangomes7/ValhallaCsvProcessor.git
    cd ValhallaCsvProcessor
    ```
 3. Open the `.pro` file or `.sln` in Qt Creator or Visual Studio with Qt integration.
