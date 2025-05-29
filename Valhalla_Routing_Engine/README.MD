@@ -13,7 +13,7 @@ This project sets up [Valhalla](https://github.com/valhalla/valhalla), an open-s
 
 ```bash
 .
-├── osm/                    # Directory for input .osm.pbf files
+├── osm/                    # Directory for input .osm.pbf files (create this folder and put inside your .osm.pbf file)
 ├── valhalla_tiles/         # Output directory for generated Valhalla tiles
 ├── valhalla.json           # Valhalla configuration file
 ├── build_tiles.sh          # Bash script to generate tiles and extract data
