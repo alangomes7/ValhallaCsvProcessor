@@ -1,10 +1,11 @@
 # Geographic Graph Tools Suite
 
-This repository contains **two powerful PyQt6 desktop applications** for working with geographic network data in CSV format:
+Here we have **two powerful PyQt6 desktop applications** for working with geographic network data in CSV format:
 
 1. **Graph Network Visualizer** – For visualizing geographic graph networks on interactive maps.
 2. **Matrix Distance Filter Application** – For filtering and cleaning geographic distance matrices using advanced criteria.
 
+* These scripts are for filter and generate the graph visualization from the generated file by Valhala Processor.
 ---
 
 ## 📍 1. Graph Network Visualizer
