@@ -1,0 +1,34 @@
+{
+  "mjolnir": {
+    "tile_dir": "/data/valhalla",
+    "tile_extract": "/data/valhalla/tiles.tar",
+    "admin": "/data/valhalla/admins.sqlite",
+    "timezone": "/data/valhalla/timezones.sqlite"
+  },
+  "loki": {
+    "actions": ["route", "locate", "one_to_many", "many_to_one", "many_to_many", "optimized_route", "isochrone", "trace_route", "trace_attributes", "height", "transit_available", "expansion"],
+    "logging": {
+      "long_request": 100.0,
+      "long_request_upper_bound": 200.0,
+      "long_request_lower_bound": 50.0
+    }
+  },
+  "thor": {},
+  "odin": {},
+  "skadi": {},
+  "meili": {},
+  "service_limits": {},
+  "httpd": {
+    "service": {
+      "listen": "0.0.0.0",
+      "port": 8002
+    },
+    "drape": {
+      "logging": {
+        "type": "std_out",
+        "color": true,
+        "verbose": true
+      }
+    }
+  }
+}
