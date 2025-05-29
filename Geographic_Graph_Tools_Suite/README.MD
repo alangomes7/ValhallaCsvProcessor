@@ -187,10 +187,6 @@ CSV must contain:
 
 This project is licensed under the MIT License.
 
-## 🛠 Support
-
-For issues or feature requests, please [open an issue](https://github.com/your-repo/issues).
-
 ---
 
 > **Note**: Each application requires its respective `.ui` file in the same directory as the script:
