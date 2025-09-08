@@ -50,8 +50,7 @@ class WorkerThread(QThread):
                 (lambda: self.read_csv(self.input_file), "Reading CSV file..."),
                 (self.filter_by_radius, "Applying distance threshold filter..."),
                 (self.filter_by_standard_deviation, "Applying standard deviation filter..."),
-                (self.filter_by_direction, "Applying direction filter..."),
-                (self.filter_by_direction2, "Applying final direction filter..."),
+                (self.filter_by_direction, "Applying direction filter to avoid overlaps..."),
                 (self.filter_by_outlier2, "Applying outlier filter..."),
                 (lambda df: self.save_filtered_data(df, self.input_file), "Saving results...")
             ]
@@ -280,6 +279,7 @@ class WorkerThread(QThread):
         attempt = 0
         max_attempts = 1000
         current_std = original_std
+        final_group = None
 
         while len(working_group) >= min_edges and attempt < max_attempts:
             current_std = np.std(working_group[distance_col].values)
@@ -289,25 +289,30 @@ class WorkerThread(QThread):
                     f"✅ Origin {origin}: Kept {len(working_group)} edges after removing {attempt} longest edges\n"
                     f"Final std dev: {current_std:.2f}m (reduced from {original_std:.2f}m)"
                 )
-                return working_group.to_dict('records')
+                final_group = working_group
+                break  # Exit the loop
 
             # Remove the edge with the longest distance
             max_idx = working_group[distance_col].idxmax()
             working_group = working_group.drop(index=max_idx)
             attempt += 1
 
-        if len(working_group) >= min_edges:
-            self.log_message.emit(
-                f"⚠️ Origin {origin}: Stopped after {attempt} removals.\n"
-                f"Kept {len(working_group)} edges. Final std dev: {current_std:.2f}m"
-            )
-            return working_group.to_dict('records')
-        else:
-            self.log_message.emit(
-                f"⚠️ Origin {origin}: Could not meet standard deviation requirement after {attempt} removals.\n"
-                f"Returning last valid group with {len(working_group)} edges. Final std dev: {current_std:.2f}m"
-            )
-            return working_group.to_dict('records')
+        if final_group is None:  # Loop finished without success
+            final_group = working_group  # Use the last state of working_group
+            if len(final_group) >= min_edges:
+                self.log_message.emit(
+                    f"⚠️ Origin {origin}: Stopped after {attempt} removals.\n"
+                    f"Kept {len(final_group)} edges. Final std dev: {current_std:.2f}m"
+                )
+            else:
+                self.log_message.emit(
+                    f"⚠️ Origin {origin}: Could not meet standard deviation requirement after {attempt} removals.\n"
+                    f"Returning last valid group with {len(final_group)} edges. Final std dev: {current_std:.2f}m"
+                )
+
+        # Ensure the final result is sorted by distance before returning
+        final_group_sorted = final_group.sort_values(distance_col)
+        return final_group_sorted.to_dict('records')
 
     def calculate_bearing(self, lat1, lon1, lat2, lon2):
         """Calculate angle (bearing) between two points in degrees."""
@@ -321,7 +326,7 @@ class WorkerThread(QThread):
         return degrees(angle) % 360
 
     def filter_by_direction(self, df):
-        """Main direction filter that processes all origin groups."""
+        """Main direction filter that removes edges not meeting angle requirements by removing longest edges."""
         result_rows = []
         grouped = df.groupby(self.config["origin_columns"])
         total_groups = len(grouped)
@@ -342,39 +347,10 @@ class WorkerThread(QThread):
 
         return pd.DataFrame(result_rows)
 
-    def filter_by_direction2(self, df):
-        """Final direction filter that removes edges not meeting angle requirements by removing longest edges."""
-        result_rows = []
-        grouped = df.groupby(self.config["origin_columns"])
-        total_groups = len(grouped)
-        self.log_message.emit(f"Processing {total_groups} origin groups with final direction filter...")
-
-        with ThreadPoolExecutor() as executor:
-            futures = []
-            for i, (origin, group) in enumerate(grouped, 1):
-                futures.append(executor.submit(
-                    self.process_origin_direction2,
-                    origin, group.copy()
-                ))
-                if i % 100 == 0 or i == total_groups:
-                    self.log_message.emit(f"Submitted {i}/{total_groups} origin groups for processing")
-
-            for future in as_completed(futures):
-                result_rows.extend(future.result())
-
-        return pd.DataFrame(result_rows)
-
-    def process_origin_direction2(self, origin, group):
+    def process_origin_direction(self, origin, group):
         """
-        Final direction filter that strictly enforces angle requirements by removing the longest edge
-        from any pair that doesn't meet the angle requirement, while preserving as many short edges as possible.
-
-        Args:
-            origin: Origin identifier
-            group: DataFrame with edges for this origin
-
-        Returns:
-            List of filtered rows that meet angle requirements
+        Direction filter that enforces angle requirements by removing the longer edge
+        from any pair that doesn't meet the angle requirement, preventing overlapping edges.
         """
         min_angle = self.config["direction_based_edge_degree"]
         min_edges = self.config["direction_based_min_degree_edges"] -1
@@ -445,81 +421,9 @@ class WorkerThread(QThread):
 
         return result
 
-    def process_origin_direction(self, origin, group):
-        """
-        Process direction filtering while preserving shortest edges.
-        1. Sort edges by distance (shortest first)
-        2. Check angle requirements
-        3. Remove longest edge if requirements not met
-        4. Repeat until valid or min edges reached
-        """
-        min_angle = self.config["direction_based_edge_degree"]
-        min_edges = self.config["direction_based_min_degree_edges"]
-
-        # Convert group to DataFrame if it isn't already
-        if not isinstance(group, pd.DataFrame):
-            group = pd.DataFrame(group)
-
-        # Prepare edges with angles and sort by distance (shortest first)
-        edges = []
-        for _, row in group.iterrows():
-            try:
-                angle = self.calculate_bearing(
-                    row[self.config["origin_lat_col"]],
-                    row[self.config["origin_lon_col"]],
-                    row[self.config["destination_lat_col"]],
-                    row[self.config["destination_lon_col"]],
-                )
-                edges.append({
-                    'row': row,
-                    'angle': angle,
-                    'distance': row[self.config["distance_column"]]
-                })
-            except KeyError as e:
-                self.log_message.emit(f"Missing required column: {str(e)}")
-                continue
-
-        if not edges:
-            self.log_message.emit(f"Warning: No valid edges found for origin {origin}")
-            return []
-
-        edges.sort(key=lambda x: x['distance'])  # Sort by distance (shortest first)
-
-        # Filtering loop
-        while len(edges) > min_edges:
-            # Check if current edges meet angle requirements
-            if self.check_angles([e['angle'] for e in edges], min_angle):
-                break
-
-            # Remove longest remaining edge (last in sorted list)
-            removed = edges.pop()
-            self.log_message.emit(
-                f"Removed edge to ({removed['row'][self.config['destination_lat_col']]:.4f}, "
-                f"{removed['row'][self.config['destination_lon_col']]:.4f}) | "
-                f"Distance: {removed['distance']:.1f}m | "
-                f"Angle: {removed['angle']:.1f}°"
-            )
-
-        # Convert back to list of rows
-        result = [e['row'] for e in edges]
-
-        if len(result) < min_edges:
-            self.log_message.emit(
-                f"Warning: Only {len(result)} edges remain for origin {origin} "
-                f"(minimum required: {min_edges})"
-            )
-
-        return result
-
     def filter_by_outlier2(self, df):
         """Wrapper function for the outlier filter to work with the processing steps.
         Applies outlier filtering to each origin group in the DataFrame.
-
-        Args:
-            df: Input DataFrame containing edge data
-
-        Returns:
-            DataFrame with outliers removed
         """
         if df.empty:
             return df
@@ -568,51 +472,6 @@ class WorkerThread(QThread):
             return result_df
 
         return pd.DataFrame(columns=df.columns)
-
-    def check_angles(self, angles, min_angle):
-        """Check if all angle pairs meet minimum separation."""
-        for i in range(len(angles)):
-            for j in range(i+1, len(angles)):
-                diff = abs((angles[i] - angles[j] + 180) % 360 - 180)
-                if diff < min_angle:
-                    return False
-        return True
-
-    def check_angle_requirements(self, rows_with_angles_dist, min_angle):
-        """
-        Check if all angle pairs meet the minimum angle requirement.
-
-        Args:
-            rows_with_angles_dist: List of tuples (row, angle, distance)
-            min_angle: Minimum required angle difference in degrees
-
-        Returns:
-            bool: True if all angle pairs meet requirement, False otherwise
-        """
-        for i in range(len(rows_with_angles_dist)):
-            for j in range(i+1, len(rows_with_angles_dist)):
-                angle_diff = abs((rows_with_angles_dist[i][1] - rows_with_angles_dist[j][1] + 180) % 360 - 180)
-                if angle_diff < min_angle:
-                    return False
-        return True
-
-    def find_longest_edge(self, rows_with_angles_dist):
-        """
-        Find the index of the edge with the longest distance.
-
-        Args:
-            rows_with_angles_dist: List of tuples (row, angle, distance)
-
-        Returns:
-            int: Index of the longest edge
-        """
-        max_dist = -1
-        longest_idx = 0
-        for idx, (_, _, dist) in enumerate(rows_with_angles_dist):
-            if dist > max_dist:
-                max_dist = dist
-                longest_idx = idx
-        return longest_idx
 
     def save_filtered_data(self, df, input_path):
         """Save filtered data to new CSV file with timestamp."""

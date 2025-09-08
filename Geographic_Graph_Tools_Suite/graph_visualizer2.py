@@ -556,14 +556,23 @@ class GraphVisualizerApp(QMainWindow):
         self.setGeometry(100, 100, 600, 400)
         
         # Load UI from file
-        self.ui = loadUi('graph_visualizer2.ui', self)
-        
+        self.ui = loadUi(self.resource_path('graph_visualizer2.ui'), self)        
         # Connect signals
         self.ui.browse_button.clicked.connect(self.browse_file)
         self.ui.run_button.clicked.connect(self.run_visualization)
         
         # Initialize variables
         self.input_file = ""
+    
+    def resource_path(self, relative_path):
+        """ Get absolute path to resource, works for dev and for PyInstaller """
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
         
     def browse_file(self):
         """Open file dialog to select input CSV file."""
