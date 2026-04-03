@@ -1,4 +1,4 @@
-#include "ValhallaCsvProcessor.h"
+#include "src/Ui/ValhallaCsvProcessor.h"
 #include <QtWidgets/QApplication>
 
 int main(int argc, char *argv[])
