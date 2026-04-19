@@ -132,7 +132,7 @@ void ValhallaWorker::processLine() {
         if (m_accumulatedLines->size() >= 1000) {
             ValhallaCsvProcessor::writeAccumulatedLines(m_outputPath, *m_accumulatedLines);
             m_accumulatedLines->clear();
-            QString logMessage = QString("Data flused....................................");
+            QString logMessage = QString("-------------------------------------------------- DATA FLUSED --------------------------------------------------");
             emit log(logMessage);
         }
     }
