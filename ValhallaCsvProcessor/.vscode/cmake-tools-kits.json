@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Qt 6.10.1 (MSVC 2022)",
+    "visualStudio": "17.0", 
+    "visualStudioArchitecture": "amd64", 
+    "preferredGenerator": {
+      "name": "Ninja"
+    },
+    "environmentVariables": {
+      "PATH": "C:/Programs_Others/Qt/6.10.1/msvc2022_64/bin;${env:PATH}",
+      "CMAKE_PREFIX_PATH": "C:/Programs_Others/Qt/6.10.1/msvc2022_64"
+    }
+  }
+]

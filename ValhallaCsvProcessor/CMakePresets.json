@@ -1,0 +1,68 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 31,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Visual Studio 18 2026",
+      "architecture": {
+        "value": "x64",
+        "strategy": "set"
+      },
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_PREFIX_PATH": "C:/Programs_Others/Qt/6.10.1/msvc2022_64",
+        "QT_QMAKE_EXECUTABLE": "C:/Programs_Others/Qt/6.10.1/msvc2022_64/bin/qmake.exe",
+        "QT_QML_GENERATE_QMLLS_INI": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG": "${sourceDir}/out/Debug/bin",
+        "CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE": "${sourceDir}/out/Release/bin"
+      },
+      "environment": {
+        "PATH": "C:/Programs_Others/Qt/6.10.1/msvc2022_64/bin;$penv{PATH}"
+      }
+    },
+    {
+      "name": "Debug",
+      "displayName": "Debug (VS 2026)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/Debug"
+      }
+    },
+    {
+      "name": "Release",
+      "displayName": "Release (VS 2026)",
+      "inherits": "base",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "Debug",
+      "configurePreset": "Debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "Release",
+      "configurePreset": "Release",
+      "configuration": "Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "Debug",
+      "configurePreset": "Debug",
+      "configuration": "Debug"
+    }
+  ]
+}

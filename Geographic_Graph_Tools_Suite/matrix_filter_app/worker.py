@@ -2,6 +2,7 @@ import os
 import logging
 import pandas as pd
 import numpy as np
+import heapq
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from PyQt6.QtCore import QThread, pyqtSignal
@@ -41,6 +42,7 @@ class WorkerThread(QThread):
                 (self.filter_by_standard_deviation, "Applying standard deviation filter..."),
                 (self.filter_by_direction, "Applying direction filter to avoid overlaps..."),
                 (self.filter_by_outlier2, "Applying outlier filter..."),
+                (self.filter_by_intermediate_nodes, "Applying intermediate routing (Transitive Reduction)..."),
                 (self.filter_by_intersection, "Applying intersection filter (removing longest intersecting edges)..."),
                 (lambda df: self.save_filtered_data(df, self.input_file), "Saving results...")
             ]
@@ -530,6 +532,102 @@ class WorkerThread(QThread):
             f"Intersection filter complete. Kept {len(result)} out of {len(df)} edges."
         )
 
+        return result
+    
+    def filter_by_intermediate_nodes(self, df):
+        """
+        Removes direct edges if a path through intermediate nodes exists
+        that is shorter than or roughly equal to the direct edge.
+        This forces the graph to behave like a real-world road network.
+        """
+        if df.empty or len(df) < 2:
+            return df
+
+        self.log_message.emit("Applying Intermediate Nodes (Transitive Reduction) filter...")
+
+        olat = self.config["origin_lat_col"]
+        olon = self.config["origin_lon_col"]
+        dlat = self.config["destination_lat_col"]
+        dlon = self.config["destination_lon_col"]
+        dist_col = self.config["distance_column"]
+
+        # 1. Build an adjacency list for the directed graph
+        # adj[u][v] = {'dist': distance, 'idx': dataframe_index}
+        adj = {}
+        
+        # Using zip is much faster than iterrows() for large DataFrames
+        for idx, u_lat, u_lon, v_lat, v_lon, d in zip(
+            df.index, df[olat], df[olon], df[dlat], df[dlon], df[dist_col]
+        ):
+            u = (u_lat, u_lon)
+            v = (v_lat, v_lon)
+            
+            if u not in adj:
+                adj[u] = {}
+            
+            # If there are duplicate edges, keep the shortest one
+            if v not in adj[u] or d < adj[u][v]['dist']:
+                adj[u][v] = {'dist': d, 'idx': idx}
+
+        edges_to_remove = set()
+        
+        # Tolerance factor: 1.05 allows an intermediate path to be up to 5% longer 
+        # than the direct line, which is standard for real-world road deviations.
+        tolerance = 1.05 
+
+        processed = 0
+        total_edges = len(df)
+        
+        # 2. Check each edge to see if a viable intermediate path exists
+        for u in adj:
+            for v, data in adj[u].items():
+                direct_dist = data['dist']
+                max_allowed_dist = direct_dist * tolerance
+                
+                # Dijkstra's algorithm to find a multi-hop path from u to v
+                # EXCLUDING the direct edge u -> v
+                queue = [(0, u)]
+                visited = set()
+                has_alternative = False
+                
+                while queue:
+                    current_dist, current_node = heapq.heappop(queue)
+                    
+                    if current_dist > max_allowed_dist:
+                        break # Stop searching if we exceeded the threshold
+                        
+                    if current_node == v and current_dist > 0:
+                        has_alternative = True
+                        break
+                        
+                    if current_node in visited:
+                        continue
+                    visited.add(current_node)
+                    
+                    for neighbor, n_data in adj.get(current_node, {}).items():
+                        # SKIP the direct edge we are currently evaluating
+                        if current_node == u and neighbor == v:
+                            continue
+                            
+                        new_dist = current_dist + n_data['dist']
+                        if new_dist <= max_allowed_dist:
+                            heapq.heappush(queue, (new_dist, neighbor))
+                
+                if has_alternative:
+                    edges_to_remove.add(data['idx'])
+                    
+            processed += len(adj[u])
+            if processed % 500 == 0:
+                self.log_message.emit(f"Processed {processed}/{total_edges} edges for intermediate routing...")
+
+        # 3. Filter the DataFrame by dropping the redundant long lines
+        result = df.drop(index=list(edges_to_remove))
+        
+        self.log_message.emit(
+            f"Intermediate Node filter complete. Removed {len(edges_to_remove)} direct bypass edges. "
+            f"Kept {len(result)} edges."
+        )
+        
         return result
 
     def save_filtered_data(self, df, input_path):

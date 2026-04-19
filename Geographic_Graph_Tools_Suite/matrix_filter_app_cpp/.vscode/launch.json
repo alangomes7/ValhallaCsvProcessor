@@ -1,0 +1,43 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug MatrixFilterApp",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/out/Debug/bin",
+            
+            "symbolSearchPath": "${workspaceFolder}/out/Debug/bin",
+            "requireExactSource": false, 
+            
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "C:/Programs_Others/Qt/6.10.1/msvc2022_64/bin;${env:PATH}"
+                }
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "3c. Debug: Make Standalone (Manual)"
+        },
+        {
+            "name": "(Release) Launch MatrixFilterApp",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/out/Release/bin",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "C:/Programs_Others/Qt/6.10.1/msvc2022_64/bin;${env:PATH}"
+                }
+            ],
+            "console": "integratedTerminal",
+            "preLaunchTask": "4c. Release: Make Standalone (Manual)"
+        }
+    ]
+}

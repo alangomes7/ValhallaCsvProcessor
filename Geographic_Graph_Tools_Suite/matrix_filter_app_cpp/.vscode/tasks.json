@@ -1,0 +1,152 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "1. Global: Clean All",
+      "type": "shell",
+      "command": "cmd",
+      "args": ["/C", "rmdir", "/S", "/Q", "build", "out"],
+      "problemMatcher": []
+    },
+    {
+      "label": "2. Global: Configure",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+        "--preset",
+        "${input:cmakePreset}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "group": "build",
+      "detail": "Configures the project using the selected CMake Preset (Debug or Release)."
+    },
+
+    // ============================================================
+    // STEP 3: DEBUG WORKFLOW
+    // ============================================================
+    {
+        "label": "3a. Debug: Build",
+        "type": "shell",
+        "command": "cmake",
+        "args": [
+          "--build", "out/build/Debug", 
+          "--config", "Debug",
+          "--", "/verbosity:minimal", "/maxcpucount"
+        ],
+        "dependsOn": "2. Global: Configure",
+        "problemMatcher": "$msCompile",
+        "group": "build",
+        "presentation": {
+          "reveal": "always",
+          "panel": "dedicated"
+        }
+    },
+    {
+        "label": "3b. Debug: Install (Standalone Folder)",
+        "type": "shell",
+        "command": "cmake",
+        "args": [
+            "--install", "out/build/Debug",
+            "--config", "Debug",
+            "--prefix", "${workspaceFolder}/out/Debug"
+        ],
+        "dependsOn": "3a. Debug: Build",
+        "detail": "Installs to out/Debug (creates /bin and /lib automatically)"
+    },
+    {
+        "label": "3c. Debug: Make Standalone (Manual)",
+        "type": "shell",
+        "command": "windeployqt",
+        "args": [
+            "--debug",
+            "--no-compiler-runtime",
+            "--qmldir", "${workspaceFolder}/src/Resources/qml",
+            "--dir", "${workspaceFolder}/out/Debug/bin",
+            "${workspaceFolder}/out/Debug/bin/DisasterPathwayManager.exe"
+        ],
+        "options": {
+            "cwd": "${workspaceFolder}",
+            "env": { "PATH": "C:/Programs_Others/Qt/6.10.1/msvc2022_64/bin;${env:PATH}" }
+        },
+        "dependsOn": "3b. Debug: Install (Standalone Folder)"
+    },
+
+    // ============================================================
+    // STEP 4: RELEASE WORKFLOW
+    // ============================================================
+    {
+        "label": "4a. Release: Build",
+        "type": "shell",
+        "command": "cmake",
+        "args": [
+          "--build", "out/build/Release", 
+          "--config", "Release",
+          "--", "/verbosity:minimal", "/maxcpucount"
+        ],
+        "dependsOn": "2. Global: Configure",
+        "problemMatcher": "$msCompile",
+        "group": "build"
+    },
+    {
+        "label": "4b. Release: Install (Standalone Folder)",
+        "type": "shell",
+        "command": "cmake",
+        "args": [
+            "--install", "out/build/Release",
+            "--config", "Release",
+            "--prefix", "${workspaceFolder}/out/Release"
+        ],
+        "dependsOn": "4a. Release: Build",
+        "detail": "Installs to out/Release (creates /bin and /lib automatically)"
+    },
+    {
+        "label": "4c. Release: Make Standalone (Manual)",
+        "type": "shell",
+        "command": "windeployqt",
+        "args": [
+            "--release",
+            "--no-compiler-runtime",
+            "--qmldir", "${workspaceFolder}/src/Resources/qml",
+            "--dir", "${workspaceFolder}/out/Release/bin",
+            "${workspaceFolder}/out/Release/bin/DisasterPathwayManager.exe"
+        ],
+        "options": {
+            "cwd": "${workspaceFolder}",
+            "env": { "PATH": "C:/Programs_Others/Qt/6.10.1/msvc2022_64/bin;${env:PATH}" }
+        },
+        "dependsOn": "4b. Release: Install (Standalone Folder)"
+    },
+    {
+      "label": "Quick Build (Incremental)",
+      "type": "shell",
+      "command": "cmake",
+      "args": [
+          "--build", "out/build/${input:buildType}",
+          "--config", "${input:buildType}",
+          "--", "/maxcpucount", "/nologo", "/verbosity:minimal"
+      ],
+      "problemMatcher": "$msCompile",
+      "presentation": {
+          "reveal": "always",
+          "panel": "new",
+          "showReuseMessage": false,
+          "clear": true
+      }
+  },
+  ],
+  "inputs": [
+    {
+      "id": "cmakePreset",
+      "type": "pickString",
+      "description": "Select CMake Preset",
+      "options": [
+        "Debug",
+        "Release"
+      ],
+      "default": "Debug"
+    }
+  ]
+}

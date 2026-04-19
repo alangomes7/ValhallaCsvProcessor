@@ -1,0 +1,34 @@
+{
+    // 1. Enable CMake Presets
+    "cmake.useCMakePresets": "always",
+
+    // 2. Formatting & Intellisense
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "cmake.configureOnOpen": true,
+
+    // 3. File Associations
+    "files.associations": {
+        "*.ui": "xml",
+        "*.qrc": "xml",
+        "qapplication": "cpp",
+        "unordered_map": "cpp",
+        "array": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "iostream": "cpp"
+    },
+    "cmake.buildDirectory": "${workspaceFolder}/out/build/${buildType}",
+    "cmake.buildToolArgs": [
+        "/verbosity:minimal",
+        "/maxcpucount"
+    ],
+    "cmake.configureSettings": {
+        "CMAKE_UNITY_BUILD": "ON",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+    },
+    "cmake.statusbar.advanced": {
+        "debug": {
+            "visibility": "visible"
+        }
+    }
+}

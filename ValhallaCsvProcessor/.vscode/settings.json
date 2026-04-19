@@ -1,0 +1,20 @@
+{
+    // 1. Enable CMake Presets
+    "cmake.useCMakePresets": "always",
+
+    // 2. Formatting & Intellisense
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "cmake.configureOnOpen": true,
+
+    // 3. File Associations
+    "files.associations": {
+        "*.ui": "xml",
+        "*.qrc": "xml",
+        "qapplication": "cpp",
+        "unordered_map": "cpp",
+        "array": "cpp",
+        "string": "cpp",
+        "vector": "cpp",
+        "iostream": "cpp"
+    }
+}
